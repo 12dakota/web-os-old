@@ -1,28 +1,25 @@
-name: Mirror ISO to Temporary File Host
+name: Mirror ISO via GitHub Artifacts
 
 on:
-  workflow_dispatch: # Gives you the manual "Run workflow" trigger button
+  workflow_dispatch: # Gives you the manual play button
 
 jobs:
-  upload-to-temp-host:
+  download-and-store:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download ISO from Blocked Server
+      - name: Download ISO from Archive.org
         run: |
-          echo "Bypassing network blocks via GitHub Runner..."
-          curl -L -o ubuntu-web-20.04.3-livecd.iso "http://darkpenguin.net"
-          echo "Download complete. Checking file size..."
-          ls -lh ubuntu-web-20.04.3-livecd.iso
+          echo "GitHub runner fetching file from Archive.org servers..."
+          curl -L -o ubuntu-web-20.04.1-livecd.iso "https://archive.org"
+          echo "Download complete! Displaying file verification info:"
+          ls -lh ubuntu-web-20.04.1-livecd.iso
 
-      - name: Upload to Temp.sh Storage
-        run: |
-          echo "Uploading to temp.sh (Supports up to 4GB files)..."
-          echo "------------------------------------------------"
-          # This uploads the file and prints the direct unblocked link to your logs
-          curl -F "file=@ubuntu-web-20.04.3-livecd.iso" https://temp.sh/upload
-          echo ""
-          echo "------------------------------------------------"
-          echo "Copy the URL printed above to your browser to download the file!"
+      - name: Upload Intact ISO as Run Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ubuntu-Web-ISO
+          path: ubuntu-web-20.04.1-livecd.iso
+          retention-days: 7 # Kept for a week to save your repository space
