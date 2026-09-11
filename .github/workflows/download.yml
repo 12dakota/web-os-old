@@ -1,0 +1,48 @@
+name: Mirror ISO to GitHub Releases
+
+on:
+  workflow_dispatch: # Gives you the manual "Run workflow" trigger button
+
+permissions:
+  contents: write # Needed to allow the runner to publish release files
+
+jobs:
+  mirror-iso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download the Blocked ISO File
+        run: |
+          echo "Downloading file from Dark Penguin server..."
+          curl -L -o ubuntu-web-20.04.3-livecd.iso "http://darkpenguin.net"
+          echo "Download complete. Verifying size..."
+          ls -lh ubuntu-web-20.04.3-livecd.iso
+
+      - name: Split File Into Safe Chunks
+        run: |
+          echo "Splitting 3.1GB file to pass GitHub's 2GB file limit..."
+          split -b 1500M ubuntu-web-20.04.3-livecd.iso "ubuntu-web-part."
+          echo "Split completed. Verification output:"
+          ls -lh ubuntu-web-part.*
+
+      - name: Create Release and Upload Parts
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v20.04.3
+          name: "Ubuntu Web Remix 20.04.3 Mirror"
+          body: |
+            ### Filter Bypass Assembly Instructions
+            Download **both** file parts down to your local machine.
+            
+            #### Rebuild commands:
+            * **Windows (Command Prompt):** `copy /b ubuntu-web-part.aa + ubuntu-web-part.ab ubuntu-web-20.04.3-livecd.iso`
+            * **Mac / Linux (Terminal):** `cat ubuntu-web-part.* > ubuntu-web-20.04.3-livecd.iso`
+          draft: false
+          prerelease: false
+          files: |
+            ubuntu-web-part.aa
+            ubuntu-web-part.ab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
