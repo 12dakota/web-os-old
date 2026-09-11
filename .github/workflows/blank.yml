@@ -1,0 +1,31 @@
+name: Mirror ISO to GitHub Releases
+
+on:
+  workflow_dispatch: # Allows you to manually trigger the download button in GitHub
+
+permissions:
+  contents: write # Grants the runner permission to create a Release
+
+jobs:
+  mirror-iso:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download the Blocked ISO File
+        run: |
+          echo "Starting download from Dark Penguin server..."
+          curl -L -o ubuntu-web-20.04.3-livecd.iso "http://darkpenguin.net"
+          echo "Download complete. Verifying file size..."
+          ls -lh ubuntu-web-20.04.3-livecd.iso
+
+      - name: Create GitHub Release and Upload ISO
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v20.04.3
+          name: "Ubuntu Web Remix 20.04.3 Mirror"
+          body: "Bypassed mirror download file for Ubuntu Web Remix ISO built on GitHub Actions."
+          draft: false
+          prerelease: false
+          files: ubuntu-web-20.04.3-livecd.iso
